@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>貪吃蛇遊戲</title>
+    <style>
+        body {
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const gridSize = 20;
+const gridCountX = canvas.width / gridSize;
+const gridCountY = canvas.height / gridSize;
+
+const snake = {
+    body: [{ x: 4, y: 4 }],
+    direction: { x: 1, y: 0 },
+    speed: 5, // 調整蛇的速度，數值越大速度越快
+    isDead: false,
+    moveCounter: 0,
+};
+
+const food = { x: 10, y: 10 };
+
+function drawSnake() {
+    ctx.fillStyle = 'green';
+    snake.body.forEach(segment => {
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+    });
+}
+
+function drawFood() {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+}
+
+function update() {
+    if (snake.isDead) {
+        const restart = window.confirm("遊戲結束！是否重新開始？");
+        if (restart) {
+            resetGame();
+        }
+        return;
+    }
+
+    // 每次畫面更新時移動蛇的位置
+    snake.moveCounter++;
+    if (snake.moveCounter >= snake.speed) {
+        const newHead = {
+            x: snake.body[0].x + snake.direction.x,
+            y: snake.body[0].y + snake.direction.y
+        };
+        snake.body.unshift(newHead);
+
+        // 檢查是否吃到食物
+        if (snake.body[0].x === food.x && snake.body[0].y === food.y) {
+            // 增加蛇的長度並重新生成食物
+            food.x = Math.floor(Math.random() * gridCountX);
+            food.y = Math.floor(Math.random() * gridCountY);
+        } else {
+            // 移除尾部節點
+            snake.body.pop();
+        }
+
+        // 檢查是否碰到畫布邊界
+        if (snake.body[0].x < 0 || snake.body[0].x >= gridCountX ||
+            snake.body[0].y < 0 || snake.body[0].y >= gridCountY) {
+            // 遊戲結束
+            snake.isDead = true;
+        }
+
+        // 檢查是否撞到自己
+        for (let i = 1; i < snake.body.length; i++) {
+            if (snake.body[0].x === snake.body[i].x && snake.body[0].y === snake.body[i].y) {
+                // 遊戲結束
+                snake.isDead = true;
+            }
+        }
+
+        snake.moveCounter = 0;
+    }
+
+    // 清空畫布
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 繪製蛇和食物
+    drawSnake();
+    drawFood();
+
+    // 下一幀更新
+    requestAnimationFrame(update);
+}
+
+function resetGame() {
+    snake.body = [{ x: 4, y: 4 }];
+    snake.direction = { x: 1, y: 0 };
+    snake.isDead = false;
+    food.x = Math.floor(Math.random() * gridCountX);
+    food.y = Math.floor(Math.random() * gridCountY);
+    update();
+}
+
+// 處理鍵盤輸入
+document.addEventListener('keydown', event => {
+    if (!snake.isDead) {
+        switch (event.keyCode) {
+            case 37: // 左箭頭
+                if (snake.direction.x !== 1) {
+                    snake.direction = { x: -1, y: 0 };
+                }
+                break;
+            case 38: // 上箭頭
+                if (snake.direction.y !== 1) {
+                    snake.direction = { x: 0, y: -1 };
+                }
+                break;
+            case 39: // 右箭頭
+                if (snake.direction.x !== -1) {
+                    snake.direction = { x: 1, y: 0 };
+                }
+                break;
+            case 40: // 下箭頭
+                if (snake.direction.y !== -1) {
+                    snake.direction = { x: 0, y: 1 };
+                }
+                break;
+        }
+    }
+});
+
+// 開始遊戲迴圈
+update();
+
+    </script>
+</body>
+</html>
